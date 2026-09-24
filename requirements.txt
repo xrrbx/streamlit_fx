@@ -4,3 +4,4 @@ altair
 google-cloud-bigquery
 python-dotenv
 google-auth
+db-dtypes
