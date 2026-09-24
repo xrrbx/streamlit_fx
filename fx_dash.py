@@ -60,35 +60,40 @@ with left_col:
     
     # Isolate last week's raw trend line directly under the metric card
 
-    # 1. Clean up data format for the chart
-    trend_data = last_week_df.reset_index()
+    # 1. Format the sparkline data
+    sparkline_data = last_week_df.reset_index()
 
-    # 2. Create the interactive line chart
-    chart = (
-    alt.Chart(trend_data)
-    # 🔥 point=True explicitly adds visible dots right onto the line
-    .mark_line(
-        color="#29B6F6", 
-        strokeWidth=2,
-        point={"size": 70, "filled": True, "fill": "#1565C0"} 
-    )
-    .encode(
-        x=alt.X('rates_date:T', title="Date"),
-        y=alt.Y(
-            'rate_eur:Q', 
-            title="Euro Rate",
-            scale=alt.Scale(zero=False) # Zooms in on your data range
-        ),
-        # This adds interactive popups when hovering over the dots
-        tooltip=[
-            alt.Tooltip('rates_date:T', title='Date', format='%Y-%m-%d'),
-            alt.Tooltip('rate_eur:Q', title='Rate', format='.4f')
-        ]
-    )
-    # 🔥 Increased height to make the graph taller and take up more space
-    .properties(height=280) 
+    # 2. Configure your custom Min and Max bounds
+    y_min = float(sparkline_data['rate_eur'].min() * 0.995)
+    y_max = float(sparkline_data['rate_eur'].max() * 1.005)
+
+    # 3. Base configuration shared by the line and the text
+    base = alt.Chart(sparkline_data).encode(
+        x=alt.X('rates_date:T', axis=None),
+        y=alt.Y('rate_eur:Q', title=None, scale=alt.Scale(domain=[y_min, y_max], clamp=True))
     )
 
-# 3. Render it inside your column layout
-    st.caption("📈 7-Day Trend (Detailed View)")
-    st.altair_chart(chart, use_container_width=True)
+    # 4. Create the line
+    line = base.mark_line(color="#29B6F6", strokeWidth=2)
+
+    # 5. 🔥 Create the value text labels (placed slightly above the points)
+    text_labels = base.mark_text(
+        align='center',
+        baseline='bottom',
+        dy=-6,                  # Shifts the text up by 6 pixels so it sits on top of the line
+        fontSize=11,
+        color="#FFFFFF"         # Adjust text color to match your theme
+    ).encode(
+        text=alt.Text('rate_eur:Q', format='.4f') # Formats to 4 decimal places
+    )
+
+    # 6. Layer them together and style as a sparkline
+    sparkline = (
+        (line + text_labels)
+        .properties(height=180) # Slightly increased height to allow room for text
+        .configure_view(strokeWidth=0)
+        .configure_axis(grid=False)
+    )
+
+    st.caption("📈 7-Day Trend with Values")
+    st.altair_chart(sparkline, use_container_width=True)
