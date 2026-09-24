@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import pandas as pd
 from datetime import datetime, timedelta
 import altair as alt
+from google.oauth2 import service_account
 
 st.set_page_config(page_title="FX dashboard", page_icon=":bar_chart:", layout="wide")
 st.title("FX dashboard")
