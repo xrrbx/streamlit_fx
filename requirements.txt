@@ -1,0 +1,5 @@
+streamlit
+pandas
+altair
+google-cloud-bigquery
+python-dotenv
