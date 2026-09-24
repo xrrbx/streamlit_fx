@@ -12,7 +12,18 @@ st.title("FX dashboard")
 @st.cache_data
 def load_bq_data():
     load_dotenv()
-    client = bigquery.Client()
+    
+    # 1. Fallback authentication logic
+    # Check if running in the cloud using Streamlit secrets, otherwise fallback to local configuration
+    if "gcp_service_account" in st.secrets:
+        # Construct authentication key mapping on the fly from Streamlit Cloud Secrets
+        credentials_info = dict(st.secrets["gcp_service_account"])
+        credentials = service_account.Credentials.from_service_account_info(credentials_info)
+        client = bigquery.Client(credentials=credentials, project=credentials_info["project_id"])
+    else:
+        # Fallback local environment activation route
+        client = bigquery.Client()
+        
     query = """
         select 
         rates_date,
